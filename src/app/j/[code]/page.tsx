@@ -177,7 +177,7 @@ export default function SessionPage() {
       <div className="max-w-lg mx-auto space-y-4">
         {/* Header */}
         <div className="text-center space-y-1 pt-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">
+          <p className="text-xs text-[#1c093f] font-semibold uppercase tracking-wide">
             mealSync
           </p>
           <h1 className="text-2xl font-bold">{session.title}</h1>

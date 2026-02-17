@@ -18,7 +18,7 @@ function timeToMinutes(time: string): number {
 }
 
 const COLORS = [
-  "bg-[#1e40af]",
+  "bg-[#1c093f]",
   "bg-[#34c759]",
   "bg-[#ff9500]",
   "bg-[#8b5cf6]",

@@ -133,7 +133,7 @@ export default function SessionPage() {
   function shareLink() {
     const url = window.location.href;
     if (navigator.share) {
-      navigator.share({ title: session?.title || "MealSync", url }).catch(() => {
+      navigator.share({ title: session?.title || "meal", url }).catch(() => {
         // User cancelled or share failed — fall back to copy
         copyLink();
       });
@@ -178,7 +178,7 @@ export default function SessionPage() {
         {/* Header */}
         <div className="text-center space-y-1 pt-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            MealSync
+            mealSync
           </p>
           <h1 className="text-2xl font-bold">{session.title}</h1>
           <p className="text-sm text-muted-foreground">

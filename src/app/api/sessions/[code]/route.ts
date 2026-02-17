@@ -41,8 +41,11 @@ export async function GET(
       responses.map((r) => ({ name: r.name, windows: r.windows }))
     );
 
+    // Strip creatorToken before sending to client
+    const { creatorToken: _token, ...safeSession } = session;
+
     return NextResponse.json({
-      session: { ...session, shortCode: code },
+      session: { ...safeSession, shortCode: code },
       responses,
       bestTimes,
     });

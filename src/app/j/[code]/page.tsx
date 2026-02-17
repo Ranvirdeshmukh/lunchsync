@@ -85,13 +85,22 @@ export default function SessionPage() {
     return () => unsub();
   }, [code]);
 
+  // Creator auth via token (not name matching)
+  const creatorToken =
+    typeof window !== "undefined"
+      ? localStorage.getItem(`lunchsync-creator-${code}`) || ""
+      : "";
+  const isCreator = !!creatorToken;
+
   async function handleConfirm(time: BestTime) {
+    if (!creatorToken) return;
     try {
       await fetch("/api/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shortCode: code,
+          creatorToken,
           confirmedTime: JSON.stringify({
             day: time.day,
             startTime: time.startTime,
@@ -104,6 +113,35 @@ export default function SessionPage() {
     }
   }
 
+  async function handleUnlock() {
+    if (!creatorToken) return;
+    try {
+      await fetch("/api/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shortCode: code,
+          creatorToken,
+          confirmedTime: null,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to unlock:", err);
+    }
+  }
+
+  function shareLink() {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: session?.title || "LunchSync", url }).catch(() => {
+        // User cancelled or share failed — fall back to copy
+        copyLink();
+      });
+    } else {
+      copyLink();
+    }
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -113,7 +151,10 @@ export default function SessionPage() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <p className="text-muted-foreground">Loading session...</p>
+        <div className="text-center space-y-3">
+          <div className="inline-block w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">Loading session...</p>
+        </div>
       </main>
     );
   }
@@ -131,12 +172,6 @@ export default function SessionPage() {
     );
   }
 
-  const currentName =
-    typeof window !== "undefined"
-      ? localStorage.getItem("lunchsync-name") || ""
-      : "";
-  const isCreator = currentName === session.createdBy;
-
   return (
     <main className="min-h-screen p-4 pb-24">
       <div className="max-w-lg mx-auto space-y-4">
@@ -147,12 +182,12 @@ export default function SessionPage() {
           </p>
           <h1 className="text-2xl font-bold">{session.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {new Date(session.dateRangeStart).toLocaleDateString("en-US", {
+            {new Date(session.dateRangeStart + "T12:00:00").toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
             })}{" "}
             &ndash;{" "}
-            {new Date(session.dateRangeEnd).toLocaleDateString("en-US", {
+            {new Date(session.dateRangeEnd + "T12:00:00").toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
             })}
@@ -161,14 +196,18 @@ export default function SessionPage() {
 
         {/* Share link */}
         <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={copyLink}>
-            {copied ? "Copied!" : "Copy link to share"}
+          <Button onClick={shareLink} size="sm" className="px-6">
+            {copied ? "Copied!" : "Share link with your group"}
           </Button>
         </div>
 
         {/* Respond form */}
         {!session.confirmedTime && (
-          <RespondForm shortCode={code} onSubmitted={fetchSession} />
+          <RespondForm
+            shortCode={code}
+            responses={responses}
+            onSubmitted={fetchSession}
+          />
         )}
 
         {/* Results */}
@@ -178,6 +217,7 @@ export default function SessionPage() {
           confirmedTime={session.confirmedTime}
           isCreator={isCreator}
           onConfirm={handleConfirm}
+          onUnlock={handleUnlock}
         />
       </div>
     </main>

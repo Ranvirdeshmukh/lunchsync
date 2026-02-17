@@ -21,7 +21,7 @@ function minutesToTime(minutes: number): string {
 /**
  * Find the best overlapping time slots across all responses.
  * Uses a slot-based approach: discretize into 15-min slots, count overlaps,
- * find contiguous blocks with maximum overlap.
+ * find contiguous blocks at each overlap level (max, max-1, etc.).
  */
 export function findBestTimes(responses: PersonWindows[]): BestTime[] {
   if (responses.length === 0) return [];
@@ -34,8 +34,8 @@ export function findBestTimes(responses: PersonWindows[]): BestTime[] {
     }
   }
 
-  // For each day, build a slot map
   const results: BestTime[] = [];
+  const seenBlocks = new Set<string>();
 
   for (const day of allDays) {
     // Map of slot (minute offset) -> set of available people
@@ -61,50 +61,63 @@ export function findBestTimes(responses: PersonWindows[]): BestTime[] {
       maxCount = Math.max(maxCount, names.size);
     }
 
-    if (maxCount < 2) continue; // Need at least 2 people
+    // Extract contiguous blocks at each overlap level (max down to 2)
+    for (let count = maxCount; count >= 2; count--) {
+      const slots = Array.from(slotMap.entries())
+        .filter(([, names]) => names.size >= count)
+        .sort((a, b) => a[0] - b[0]);
 
-    // Find contiguous blocks with maxCount overlap
-    const slots = Array.from(slotMap.entries())
-      .filter(([, names]) => names.size === maxCount)
-      .sort((a, b) => a[0] - b[0]);
+      let blockStart = -1;
+      let blockNames: Set<string> = new Set();
+      let prevSlot = -1;
 
-    let blockStart = -1;
-    let blockNames: string[] = [];
-    let prevSlot = -1;
+      for (const [slot, names] of slots) {
+        if (blockStart === -1 || slot !== prevSlot + SLOT_MINUTES) {
+          if (blockStart !== -1) {
+            const key = `${day}-${blockStart}-${prevSlot}`;
+            if (!seenBlocks.has(key)) {
+              seenBlocks.add(key);
+              const namesArr = Array.from(blockNames);
+              results.push({
+                day,
+                startTime: minutesToTime(blockStart),
+                endTime: minutesToTime(prevSlot + SLOT_MINUTES),
+                availableCount: namesArr.length,
+                availableNames: namesArr,
+                durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
+              });
+            }
+          }
+          blockStart = slot;
+          blockNames = new Set(names);
+        } else {
+          // Intersect names to get people available for the whole block
+          for (const n of blockNames) {
+            if (!names.has(n)) blockNames.delete(n);
+          }
+        }
+        prevSlot = slot;
+      }
 
-    for (const [slot, names] of slots) {
-      if (blockStart === -1 || slot !== prevSlot + SLOT_MINUTES) {
-        // Save previous block
-        if (blockStart !== -1) {
+      if (blockStart !== -1) {
+        const key = `${day}-${blockStart}-${prevSlot}`;
+        if (!seenBlocks.has(key)) {
+          seenBlocks.add(key);
+          const namesArr = Array.from(blockNames);
           results.push({
             day,
             startTime: minutesToTime(blockStart),
             endTime: minutesToTime(prevSlot + SLOT_MINUTES),
-            availableCount: maxCount,
-            availableNames: blockNames,
+            availableCount: namesArr.length,
+            availableNames: namesArr,
             durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
           });
         }
-        blockStart = slot;
-        blockNames = Array.from(names);
       }
-      prevSlot = slot;
-    }
-
-    // Save last block
-    if (blockStart !== -1) {
-      results.push({
-        day,
-        startTime: minutesToTime(blockStart),
-        endTime: minutesToTime(prevSlot + SLOT_MINUTES),
-        availableCount: maxCount,
-        availableNames: blockNames,
-        durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
-      });
     }
   }
 
-  // Sort: most people available -> longest duration -> earlier time
+  // Sort: most people available -> longest duration -> earlier day/time
   results.sort((a, b) => {
     if (b.availableCount !== a.availableCount)
       return b.availableCount - a.availableCount;

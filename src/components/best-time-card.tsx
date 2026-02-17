@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { BestTime } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export function BestTimeCard({
   onConfirm,
   isCreator,
 }: BestTimeCardProps) {
+  const [confirming, setConfirming] = useState(false);
   const allAvailable = bestTime.availableCount === totalPeople;
 
   return (
@@ -57,13 +59,32 @@ export function BestTimeCard({
             </p>
           </div>
           {isCreator && (
-            <Button
-              size="sm"
-              onClick={() => onConfirm(bestTime)}
-              className="shrink-0"
-            >
-              Lock this time
-            </Button>
+            <div className="shrink-0">
+              {confirming ? (
+                <div className="flex flex-col gap-1">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onConfirm(bestTime);
+                      setConfirming(false);
+                    }}
+                  >
+                    Confirm
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfirming(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" onClick={() => setConfirming(true)}>
+                  Lock this time
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </CardContent>

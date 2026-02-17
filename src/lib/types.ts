@@ -18,6 +18,7 @@ export interface Session {
   dateRangeStart: string;
   dateRangeEnd: string;
   createdBy: string;
+  creatorToken: string;
   confirmedTime: string | null;
   createdAt: string;
   expiresAt: string;

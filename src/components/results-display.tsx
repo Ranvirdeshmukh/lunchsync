@@ -4,6 +4,8 @@ import { Response, BestTime } from "@/lib/types";
 import { BestTimeCard } from "./best-time-card";
 import { TimelineBar, TimelineHeader } from "./timeline-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ResultsDisplayProps {
   responses: Response[];
@@ -11,6 +13,7 @@ interface ResultsDisplayProps {
   confirmedTime: string | null;
   isCreator: boolean;
   onConfirm: (time: BestTime) => void;
+  onUnlock: () => void;
 }
 
 function formatDay(day: string): string {
@@ -35,7 +38,10 @@ export function ResultsDisplay({
   confirmedTime,
   isCreator,
   onConfirm,
+  onUnlock,
 }: ResultsDisplayProps) {
+  const [copiedResult, setCopiedResult] = useState(false);
+
   if (responses.length === 0) {
     return (
       <Card>
@@ -58,10 +64,18 @@ export function ResultsDisplay({
       // ignore
     }
 
+    function copyResult() {
+      if (!parsed) return;
+      const text = `${formatDay(parsed.day)}, ${formatTime(parsed.startTime)} – ${formatTime(parsed.endTime)}`;
+      navigator.clipboard.writeText(text);
+      setCopiedResult(true);
+      setTimeout(() => setCopiedResult(false), 2000);
+    }
+
     return (
       <div className="space-y-4">
         <Card className="border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20">
-          <CardContent className="pt-6 text-center space-y-2">
+          <CardContent className="pt-6 text-center space-y-3">
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
               Confirmed
             </p>
@@ -77,6 +91,18 @@ export function ResultsDisplay({
               <p className="text-xl font-bold">{confirmedTime}</p>
             )}
             <p className="text-muted-foreground">See you there!</p>
+            <div className="flex justify-center gap-2 pt-1">
+              {parsed && (
+                <Button variant="outline" size="sm" onClick={copyResult}>
+                  {copiedResult ? "Copied!" : "Copy to share"}
+                </Button>
+              )}
+              {isCreator && (
+                <Button variant="outline" size="sm" onClick={onUnlock}>
+                  Unlock
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -99,7 +125,7 @@ export function ResultsDisplay({
       {/* Best times */}
       {bestTimes.length > 0 && (
         <div className="space-y-2">
-          {bestTimes.slice(0, 3).map((bt, i) => (
+          {bestTimes.slice(0, 5).map((bt, i) => (
             <BestTimeCard
               key={i}
               bestTime={bt}

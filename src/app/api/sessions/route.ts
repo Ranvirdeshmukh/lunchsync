@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { generateShortCode } from "@/lib/shortcode";
+import { parseAvailability } from "@/lib/ai";
+import { customAlphabet } from "nanoid";
+
+const generateToken = customAlphabet(
+  "abcdefghijklmnopqrstuvwxyz0123456789",
+  24
+);
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, dateRangeStart, dateRangeEnd, createdBy } = await req.json();
+    const { title, dateRangeStart, dateRangeEnd, createdBy, creatorAvailability } =
+      await req.json();
 
     if (!title || !dateRangeStart || !dateRangeEnd || !createdBy) {
       return NextResponse.json(
@@ -14,6 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const shortCode = generateShortCode();
+    const creatorToken = generateToken();
     const now = new Date().toISOString();
     const expiresAt = new Date(
       Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -25,12 +34,34 @@ export async function POST(req: NextRequest) {
       dateRangeStart,
       dateRangeEnd,
       createdBy,
+      creatorToken,
       confirmedTime: null,
       createdAt: now,
       expiresAt,
     });
 
-    return NextResponse.json({ shortCode }, { status: 201 });
+    // If creator provided availability, parse and save it as a response
+    if (creatorAvailability && creatorAvailability.trim()) {
+      const windows = await parseAvailability(
+        creatorAvailability.trim(),
+        dateRangeStart,
+        dateRangeEnd
+      );
+
+      await adminDb
+        .collection("sessions")
+        .doc(shortCode)
+        .collection("responses")
+        .doc(createdBy)
+        .set({
+          rawInput: creatorAvailability.trim(),
+          windows,
+          createdAt: now,
+          updatedAt: now,
+        });
+    }
+
+    return NextResponse.json({ shortCode, creatorToken }, { status: 201 });
   } catch (error) {
     console.error("Error creating session:", error);
     return NextResponse.json(

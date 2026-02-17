@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -16,6 +17,7 @@ export function CreateSessionForm() {
     }
     return "";
   });
+  const [availability, setAvailability] = useState("");
   const [dateRangeStart, setDateRangeStart] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -43,11 +45,17 @@ export function CreateSessionForm() {
           dateRangeStart,
           dateRangeEnd,
           createdBy: name.trim(),
+          creatorAvailability: availability.trim() || undefined,
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
+        // Store creator token for this session
+        localStorage.setItem(
+          `lunchsync-creator-${data.shortCode}`,
+          data.creatorToken
+        );
         router.push(`/j/${data.shortCode}`);
       }
     } catch (err) {
@@ -108,6 +116,26 @@ export function CreateSessionForm() {
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="availability">
+              Your availability{" "}
+              <span className="text-muted-foreground font-normal">
+                (optional)
+              </span>
+            </Label>
+            <Textarea
+              id="availability"
+              placeholder="Free Thursday after 1pm, Friday anytime"
+              value={availability}
+              onChange={(e) => setAvailability(e.target.value)}
+              rows={2}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Add yours now so you don&apos;t have to later
+            </p>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

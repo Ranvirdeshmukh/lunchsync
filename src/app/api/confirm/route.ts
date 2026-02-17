@@ -3,9 +3,9 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
-    const { shortCode, confirmedTime } = await req.json();
+    const { shortCode, confirmedTime, creatorToken } = await req.json();
 
-    if (!shortCode || !confirmedTime) {
+    if (!shortCode || !creatorToken) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -24,8 +24,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify creator identity
+    const session = sessionDoc.data()!;
+    if (session.creatorToken !== creatorToken) {
+      return NextResponse.json(
+        { error: "Only the session creator can confirm or unlock times" },
+        { status: 403 }
+      );
+    }
+
+    // confirmedTime = null means unlock, otherwise lock
     await adminDb.collection("sessions").doc(shortCode).update({
-      confirmedTime,
+      confirmedTime: confirmedTime ?? null,
     });
 
     return NextResponse.json({ success: true });

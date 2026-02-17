@@ -21,7 +21,7 @@ function minutesToTime(minutes: number): string {
 /**
  * Find the best overlapping time slots across all responses.
  * Uses a slot-based approach: discretize into 15-min slots, count overlaps,
- * find contiguous blocks at each overlap level (max, max-1, etc.).
+ * find contiguous blocks at each overlap level.
  */
 export function findBestTimes(responses: PersonWindows[]): BestTime[] {
   if (responses.length === 0) return [];
@@ -61,59 +61,47 @@ export function findBestTimes(responses: PersonWindows[]): BestTime[] {
       maxCount = Math.max(maxCount, names.size);
     }
 
-    // Extract contiguous blocks at each overlap level (max down to 2)
+    // For each overlap level, find contiguous blocks where EXACTLY
+    // that many people overlap (same set of people throughout)
     for (let count = maxCount; count >= 2; count--) {
+      // Get sorted slots where exactly `count` people are available
       const slots = Array.from(slotMap.entries())
-        .filter(([, names]) => names.size >= count)
+        .filter(([, names]) => names.size === count)
         .sort((a, b) => a[0] - b[0]);
 
       let blockStart = -1;
-      let blockNames: Set<string> = new Set();
+      let blockNames: string[] = [];
       let prevSlot = -1;
 
+      function saveBlock() {
+        if (blockStart === -1) return;
+        const key = `${day}-${blockStart}-${prevSlot}-${blockNames.sort().join(",")}`;
+        if (seenBlocks.has(key)) return;
+        seenBlocks.add(key);
+        results.push({
+          day,
+          startTime: minutesToTime(blockStart),
+          endTime: minutesToTime(prevSlot + SLOT_MINUTES),
+          availableCount: blockNames.length,
+          availableNames: [...blockNames],
+          durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
+        });
+      }
+
       for (const [slot, names] of slots) {
-        if (blockStart === -1 || slot !== prevSlot + SLOT_MINUTES) {
-          if (blockStart !== -1) {
-            const key = `${day}-${blockStart}-${prevSlot}`;
-            if (!seenBlocks.has(key)) {
-              seenBlocks.add(key);
-              const namesArr = Array.from(blockNames);
-              results.push({
-                day,
-                startTime: minutesToTime(blockStart),
-                endTime: minutesToTime(prevSlot + SLOT_MINUTES),
-                availableCount: namesArr.length,
-                availableNames: namesArr,
-                durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
-              });
-            }
-          }
+        const currentNames = Array.from(names).sort();
+        if (
+          blockStart === -1 ||
+          slot !== prevSlot + SLOT_MINUTES ||
+          currentNames.join(",") !== blockNames.sort().join(",")
+        ) {
+          saveBlock();
           blockStart = slot;
-          blockNames = new Set(names);
-        } else {
-          // Intersect names to get people available for the whole block
-          for (const n of blockNames) {
-            if (!names.has(n)) blockNames.delete(n);
-          }
+          blockNames = currentNames;
         }
         prevSlot = slot;
       }
-
-      if (blockStart !== -1) {
-        const key = `${day}-${blockStart}-${prevSlot}`;
-        if (!seenBlocks.has(key)) {
-          seenBlocks.add(key);
-          const namesArr = Array.from(blockNames);
-          results.push({
-            day,
-            startTime: minutesToTime(blockStart),
-            endTime: minutesToTime(prevSlot + SLOT_MINUTES),
-            availableCount: namesArr.length,
-            availableNames: namesArr,
-            durationMinutes: prevSlot + SLOT_MINUTES - blockStart,
-          });
-        }
-      }
+      saveBlock();
     }
   }
 

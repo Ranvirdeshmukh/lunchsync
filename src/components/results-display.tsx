@@ -74,9 +74,9 @@ export function ResultsDisplay({
 
     return (
       <div className="space-y-4">
-        <Card className="border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20">
+        <Card className="border-2 border-[#34c759] bg-green-50 dark:bg-green-950/20">
           <CardContent className="pt-6 text-center space-y-3">
-            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+            <p className="text-sm font-medium text-[#34c759] uppercase tracking-wide">
               Confirmed
             </p>
             {parsed ? (

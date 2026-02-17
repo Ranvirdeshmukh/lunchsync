@@ -18,14 +18,14 @@ function timeToMinutes(time: string): number {
 }
 
 const COLORS = [
-  "bg-blue-400",
-  "bg-emerald-400",
-  "bg-amber-400",
-  "bg-purple-400",
-  "bg-rose-400",
-  "bg-cyan-400",
-  "bg-orange-400",
-  "bg-indigo-400",
+  "bg-[#1e40af]",
+  "bg-[#34c759]",
+  "bg-[#ff9500]",
+  "bg-[#8b5cf6]",
+  "bg-[#f97316]",
+  "bg-[#3b82f6]",
+  "bg-[#ef4444]",
+  "bg-[#fbbf24]",
 ];
 
 export function TimelineBar({

@@ -16,10 +16,10 @@ interface RespondFormProps {
 
 function getUserId(): string {
   if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("lunchsync-user-id");
+  let id = localStorage.getItem("mealsync-user-id");
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem("lunchsync-user-id", id);
+    localStorage.setItem("mealsync-user-id", id);
   }
   return id;
 }
@@ -27,7 +27,7 @@ function getUserId(): string {
 export function RespondForm({ shortCode, responses, onSubmitted }: RespondFormProps) {
   const [name, setName] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("lunchsync-name") || "";
+      return localStorage.getItem("mealsync-name") || "";
     }
     return "";
   });
@@ -39,7 +39,7 @@ export function RespondForm({ shortCode, responses, onSubmitted }: RespondFormPr
 
   // Check if user already responded
   useEffect(() => {
-    const storedName = localStorage.getItem("lunchsync-name") || "";
+    const storedName = localStorage.getItem("mealsync-name") || "";
     if (storedName && responses.length > 0) {
       const existing = responses.find(
         (r) => r.name.toLowerCase() === storedName.toLowerCase()
@@ -59,7 +59,7 @@ export function RespondForm({ shortCode, responses, onSubmitted }: RespondFormPr
     setLoading(true);
     setParseError(false);
     try {
-      localStorage.setItem("lunchsync-name", name.trim());
+      localStorage.setItem("mealsync-name", name.trim());
 
       const res = await fetch("/api/respond", {
         method: "POST",

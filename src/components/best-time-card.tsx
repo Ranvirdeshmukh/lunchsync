@@ -40,13 +40,13 @@ export function BestTimeCard({
 
   return (
     <Card
-      className={`border-2 ${allAvailable ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-blue-300"}`}
+      className={`border-2 ${allAvailable ? "border-[#1e40af] bg-blue-50 dark:bg-blue-950/20" : "border-blue-200"}`}
     >
       <CardContent className="pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             {allAvailable && (
-              <Badge className="bg-emerald-600 mb-1">BEST TIME</Badge>
+              <Badge className="bg-[#1e40af] mb-1">BEST TIME</Badge>
             )}
             <p className="text-lg font-semibold">{formatDay(bestTime.day)}</p>
             <p className="text-2xl font-bold">

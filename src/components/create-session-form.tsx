@@ -13,7 +13,7 @@ export function CreateSessionForm() {
   const [title, setTitle] = useState("");
   const [name, setName] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("lunchsync-name") || "";
+      return localStorage.getItem("mealsync-name") || "";
     }
     return "";
   });
@@ -35,7 +35,7 @@ export function CreateSessionForm() {
 
     setLoading(true);
     try {
-      localStorage.setItem("lunchsync-name", name.trim());
+      localStorage.setItem("mealsync-name", name.trim());
 
       const res = await fetch("/api/sessions", {
         method: "POST",
@@ -53,7 +53,7 @@ export function CreateSessionForm() {
       if (res.ok) {
         // Store creator token for this session
         localStorage.setItem(
-          `lunchsync-creator-${data.shortCode}`,
+          `mealsync-creator-${data.shortCode}`,
           data.creatorToken
         );
         router.push(`/j/${data.shortCode}`);

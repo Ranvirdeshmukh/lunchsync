@@ -133,7 +133,7 @@ export default function SessionPage() {
   function shareLink() {
     const url = window.location.href;
     if (navigator.share) {
-      navigator.share({ title: session?.title || "meal", url }).catch(() => {
+      navigator.share({ title: session?.title || "mealSync", url }).catch(() => {
         // User cancelled or share failed — fall back to copy
         copyLink();
       });

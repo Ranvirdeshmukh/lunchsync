@@ -13,11 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "meal — Find a time that works for everyone",
+  title: "mealSync — Find a time that works for everyone",
   description:
     "Type when you're free in plain English. AI finds the best overlap. No accounts, no grids.",
   openGraph: {
-    title: "meal — Find a time that works for everyone",
+    title: "mealSync — Find a time that works for everyone",
     description:
       "Type when you're free in plain English. AI finds the best overlap.",
     type: "website",

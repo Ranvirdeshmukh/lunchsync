@@ -20,6 +20,7 @@ export interface Session {
   createdBy: string;
   creatorToken: string;
   confirmedTime: string | null;
+  location?: string | null;
   createdAt: string;
   expiresAt: string;
 }

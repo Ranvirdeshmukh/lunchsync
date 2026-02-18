@@ -174,12 +174,19 @@ export default function SessionPage() {
 
   return (
     <main className="min-h-screen p-4 pb-24">
-      <div className="max-w-lg mx-auto space-y-4">
-        {/* Header */}
-        <div className="text-center space-y-1 pt-4">
+      <div className="max-w-lg mx-auto space-y-3">
+        {/* Sticky share bar */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm -mx-4 px-4 py-2 flex items-center justify-between border-b border-transparent">
           <p className="text-xs text-[#1c093f] font-semibold uppercase tracking-wide">
             mealSync
           </p>
+          <Button onClick={shareLink} size="xs" variant="outline" className="px-3">
+            {copied ? "Copied!" : "Share link"}
+          </Button>
+        </div>
+
+        {/* Header */}
+        <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold">{session.title}</h1>
           <p className="text-sm text-muted-foreground">
             {new Date(session.dateRangeStart + "T12:00:00").toLocaleDateString("en-US", {
@@ -191,14 +198,10 @@ export default function SessionPage() {
               month: "short",
               day: "numeric",
             })}
+            {session.location && (
+              <span className="block mt-0.5">{session.location}</span>
+            )}
           </p>
-        </div>
-
-        {/* Share link */}
-        <div className="flex justify-center">
-          <Button onClick={shareLink} size="sm" className="px-6">
-            {copied ? "Copied!" : "Share link with your group"}
-          </Button>
         </div>
 
         {/* Respond form */}
@@ -216,6 +219,8 @@ export default function SessionPage() {
           bestTimes={bestTimes}
           confirmedTime={session.confirmedTime}
           isCreator={isCreator}
+          sessionTitle={session.title}
+          sessionLocation={session.location ?? undefined}
           onConfirm={handleConfirm}
           onUnlock={handleUnlock}
         />
